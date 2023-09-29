@@ -1,9 +1,9 @@
 #include <time.h>
 #include "comandossimplificados.h"
-#define ferInicial 100
+#define ferInicial 1
 #define ferEntrada 1
 #define ferSaida 1
-#define ferMax 300000
+#define ferMax 3000000
 
 int totalFeromonios;
 
@@ -90,14 +90,44 @@ int testarResultado(SparseMatrix* mat, int entrada[], int tamanho){
     
 }
 
-void algoritmoFurmigona(SparseMatrix* mat, int tamanho){
+void zerarSimples(int* vetor, int tamanho){
+    for(int i = 0; i < tamanho; ++i){
+        if(vetor[i] == 0){
+            break;
+        }else{
+            vetor[i] = 0;
+        }
+    }
+}
+
+void inserirSeNaoPertence(int* vetorFeromonio, int valor, int tamanho){
+    for(int i = 0; i < tamanho; ++i){
+        if(vetorFeromonio[i] == valor){
+            break;
+        }else if(vetorFeromonio[i] == 0){
+            vetorFeromonio[i] = valor;
+            break;
+        }
+    }
+}
+
+int ajustarFormigasGulosas(int* index, int* tabela, int tamanho){
+    for(int i = 0; i < tamanho; ++i){
+        tabela[index[i]] = i + 1;
+    }
+}
+
+void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
     int* marcado = malloc(sizeof(int*) * (tamanho - 1));
     int* tabela = malloc(sizeof(int*) * (tamanho - 1));
     ajustarEntradas(tabela, tamanho);
+    //ajustarFormigasGulosas(index, tabela, tamanho);
     totalFeromonios = ferInicial * tamanho;
     int* vetorResposta = malloc(sizeof(int*) * (tamanho - 1));
-    int* vetorFinal = malloc(sizeof(int*) * (tamanho - 1));;
+    int* vetorFinal = malloc(sizeof(int*) * (tamanho - 1));
+    int* vetorFeromonio = malloc(sizeof(int*) * (tamanho - 1));
     zerarEntradas(vetorFinal, tamanho);
+    zerarEntradas(vetorFeromonio, tamanho);
     //printf("%i ", tamanho);
     int menor = tamanho;
     int atual;
@@ -111,7 +141,7 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho){
         tam2 = tamanho;
         aux = 0;
         atual = 0;
-        zerarEntradas(vetorResposta, tamanho);
+        zerarSimples(vetorResposta, tamanho);
         zerarEntradas(marcado, tamanho);
         //printf("%i ", tam2);
         while(tam2 > 0){
@@ -137,10 +167,12 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho){
         //printf("\n");
         //imprima(testarResultado(mat, vetorResposta, tamanho));
         //printf("\n");
-        if(atual < menor){
-            zerarEntradas(vetorFinal, tamanho);
+        if(atual <= menor){
+            zerarSimples(vetorFinal, tamanho);
+            zerarEntradas(vetorFeromonio, tamanho);
             for(int i = 0; i < tamanho; ++i){
                 vetorFinal[i] = vetorResposta[i];
+                vetorFeromonio[i] = vetorResposta[i];
                 if(vetorFinal[i] == 0){
                     break;
                 }
@@ -152,10 +184,9 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho){
             //imprima(totalFeromonios);
             for(int i = 0; i < tamanho; ++i){
                 //imprima(vetorFinal[i]);
-                if(vetorFinal[i] != 0){
-                    //imprima(vetorFinal[i]);
-                    colocarFeromonios(tabela, vetorResposta[i]);
-                    colocarFeromonios(tabela,vetorFinal[i]);
+                if(vetorFeromonio[i] != 0){
+                    inserirSeNaoPertence(vetorFeromonio, vetorResposta[i], tamanho);
+                    colocarFeromonios(tabela,vetorFeromonio[i]);
                 }else{
                     break;
                 }
@@ -164,9 +195,9 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho){
         }else{
             for(int i = 0; i < tamanho; ++i){
                 //imprima(vetorFinal[i]);
-                if(vetorFinal[i] != 0){
+                if(vetorFeromonio[i] != 0){
                     //imprima(vetorFinal[i]);
-                    colocarFeromonios(tabela,vetorFinal[i]);
+                    colocarFeromonios(tabela,vetorFeromonio[i]);
                 }else{
                     break;
                 }
