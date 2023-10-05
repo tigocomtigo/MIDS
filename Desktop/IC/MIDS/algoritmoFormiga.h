@@ -1,10 +1,12 @@
 #include <time.h>
 #include "comandossimplificados.h"
 #define ferInicial 1
-#define ferEntrada 1
+//#define ferEntrada 32
 #define ferSaida 1
-#define ferMax 3000000
+#define ferMax 2000000
+#define maxFormiga 30000
 
+int ferEntrada;
 int totalFeromonios;
 
 // Como fazer isso funcionar?
@@ -22,12 +24,15 @@ int encontrarCaminhoRandomico(int* tabela, int tamTabela, int* marcado){
     int aux = rand() % (totalFeromonios);
     int i = 0;
     int j = 0;
-    while(j < aux){
+    while(j <= aux){
         //printf("j:");
         j += tabela[i];
         //imprima(j);
         ++i;
     }
+    if(i > tamTabela){
+        i = 0;
+    };
     if(marcado[i] != 0){
         for(int k = i; k < tamTabela; ++k){
             if(marcado[k] == 0){
@@ -59,8 +64,8 @@ int removerAdjascentesFormigas(SparseMatrix* mat, int* marcado, int pos, int tam
     Node* aux = mat->data[pos];
     int retorno = tam2 - 1;
     while(aux != NULL){
-        if(marcado[aux->col] == 0){
-            marcado[aux->col] = 2;
+        if(marcado[aux->col - 1] == 0){
+            marcado[aux->col - 1] = 2;
             --retorno;
         }
         aux = aux->next;
@@ -70,6 +75,10 @@ int removerAdjascentesFormigas(SparseMatrix* mat, int* marcado, int pos, int tam
 
 int testarResultado(SparseMatrix* mat, int entrada[], int tamanho){
     int* marcado = malloc(sizeof(int*) * (tamanho - 1));
+    if(marcado == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     zerarEntradas(marcado, tamanho);
     for(int i = 0; i < tamanho; ++i){
         //marcado[i] == 1;
@@ -117,15 +126,45 @@ int ajustarFormigasGulosas(int* index, int* tabela, int tamanho){
     }
 }
 
-void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
+void tirarFeromonios(int* tabela, int tamanho){
+    for(int i = 0; i < tamanho; ++i){
+        if(tabela[i] > 1){
+            tabela[i] = tabela[i] - ferSaida;
+            totalFeromonios -= ferEntrada;
+        }
+    }
+}
+
+void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int calcularMelhor){
+    ferEntrada = calcularMelhor;
     int* marcado = malloc(sizeof(int*) * (tamanho - 1));
+    if(marcado == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     int* tabela = malloc(sizeof(int*) * (tamanho - 1));
+    if(tabela == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     ajustarEntradas(tabela, tamanho);
     //ajustarFormigasGulosas(index, tabela, tamanho);
     totalFeromonios = ferInicial * tamanho;
     int* vetorResposta = malloc(sizeof(int*) * (tamanho - 1));
+    if(vetorResposta == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     int* vetorFinal = malloc(sizeof(int*) * (tamanho - 1));
+    if(vetorFinal == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     int* vetorFeromonio = malloc(sizeof(int*) * (tamanho - 1));
+    if(vetorFeromonio == NULL){
+        printf("Erro na alocação de memória");
+        exit(0);
+    }
     zerarEntradas(vetorFinal, tamanho);
     zerarEntradas(vetorFeromonio, tamanho);
     //printf("%i ", tamanho);
@@ -134,10 +173,12 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
     int aux;
     int tam2;
     int pos;
+    int formiga = 0;
     //zerarEntradas(vetorResposta,tamanho);
     //printf("%i ", totalFeromonios);
-    while(totalFeromonios < ferMax){
+    while(formiga < maxFormiga){
         //imprima(totalFeromonios);
+        ++formiga;
         tam2 = tamanho;
         aux = 0;
         atual = 0;
@@ -187,7 +228,9 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
                 if(vetorFeromonio[i] != 0){
                     inserirSeNaoPertence(vetorFeromonio, vetorResposta[i], tamanho);
                     colocarFeromonios(tabela,vetorFeromonio[i]);
+                    tirarFeromonios(tabela, tamanho);
                 }else{
+
                     break;
                 }
             }
@@ -198,6 +241,7 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
                 if(vetorFeromonio[i] != 0){
                     //imprima(vetorFinal[i]);
                     colocarFeromonios(tabela,vetorFeromonio[i]);
+                    tirarFeromonios(tabela, tamanho);
                 }else{
                     break;
                 }
@@ -207,7 +251,7 @@ void algoritmoFurmigona(SparseMatrix* mat, int tamanho, int* index){
     }
     //zerarEntradas(marcado, tamanho);
     //imprima(testarResultado(mat, vetorFinal, tamanho));
-    
+
     for(int i = 0; i < tamanho; ++i){
         
         if(vetorFinal[i] == 0){

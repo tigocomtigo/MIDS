@@ -99,7 +99,7 @@ void printSparseMatrixTeste(SparseMatrix* matrix, int teste) {
 }
 
 // Função para inserir os valores do arquivo texto e retornar o numero de arestas de cada elemento
-int* insertFileValues(SparseMatrix* matrix, FILE* file, int size){
+int* insertFileValues(SparseMatrix* matrix, FILE* file, int size, int tipo){
     int valor1, valor2;
     int* retorno = (int*) malloc(sizeof(int*) * size);
     if(retorno == NULL){
@@ -110,12 +110,25 @@ int* insertFileValues(SparseMatrix* matrix, FILE* file, int size){
             retorno[i] = 0;
         }
     }
-    while(!feof(file)){
-        fscanf(file,"%i %i\n", &valor1, &valor2);
-        insertElement(matrix, valor1 - 1, valor2 - 1, valor2);
-        insertElement(matrix, valor2 - 1, valor1 - 1, valor1);
-        ++retorno[valor1 - 1];
-        ++retorno[valor2 - 1];
+    if(tipo == 1){
+        while(!feof(file)){
+            fscanf(file,"%i %i\n", &valor1, &valor2);
+            //fscanf(file,"%i %i\n", &valor1, &valor2);
+            insertElement(matrix, valor1 - 1, valor2 - 1, valor2);
+            insertElement(matrix, valor2 - 1, valor1 - 1, valor1);
+            ++retorno[valor1 - 1];
+            ++retorno[valor2 - 1];
+        }
+    }else if(tipo == 2){
+        while(!feof(file)){
+            fscanf(file,"e %i %i\n", &valor1, &valor2);
+            //fscanf(file,"%i %i\n", &valor1, &valor2);
+            insertElement(matrix, valor1 - 1, valor2 - 1, valor2);
+            insertElement(matrix, valor2 - 1, valor1 - 1, valor1);
+            ++retorno[valor1 - 1];
+            ++retorno[valor2 - 1];
+        }
     }
+    
     return retorno;
 }
